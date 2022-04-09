@@ -2,9 +2,6 @@ package com.test_task.controller;
 
 import com.test_task.entity.User;
 import com.test_task.repository.UserRepository;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Controller;
 
 import java.io.BufferedReader;
@@ -15,11 +12,9 @@ import java.util.List;
 @Controller
 public class UserController {
     private final UserRepository userRepository;
-    private final MongoTemplate mongoTemplate;
 
-    public UserController(UserRepository userRepository, MongoTemplate mongoTemplate) {
+    public UserController(UserRepository userRepository) {
         this.userRepository = userRepository;
-        this.mongoTemplate = mongoTemplate;
     }
 
     public void run() {
@@ -82,11 +77,11 @@ public class UserController {
 
     private void update(BufferedReader reader) throws IOException {
         String prevEmail = reader.readLine();
-        if (!exists(prevEmail)) {
+        if (!userRepository.existsByEmail(prevEmail)) {
             System.out.println("user doesn't exist");
             return;
         }
-        User user = findByEmail(prevEmail);
+        User user = userRepository.findByEmail(prevEmail);
         System.out.println("To edit name press 1");
         System.out.println("To edit email press 2");
         System.out.println("To edit both press 3");
@@ -101,7 +96,7 @@ public class UserController {
             case "2" -> {
                 System.out.println("Please, enter new email");
                 String email = reader.readLine();
-                if (exists(email)) {
+                if (userRepository.existsByEmail(email)) {
                     System.out.println("user already exists");
                     return;
                 }
@@ -113,7 +108,7 @@ public class UserController {
                 String nameEdit = reader.readLine();
                 System.out.println("Please, enter new email");
                 String emailEdit = reader.readLine();
-                if (exists(emailEdit)) {
+                if (userRepository.existsByEmail(emailEdit)) {
                     System.out.println("user already exists");
                     return;
                 }
@@ -127,16 +122,11 @@ public class UserController {
     private void delete(BufferedReader reader) throws IOException {
         System.out.println("Please, enter email");
         String email = reader.readLine();
-        if (!exists(email)) {
+        if (!userRepository.existsByEmail(email)) {
             System.out.println("user doesn't exist");
             return;
         }
-        userRepository.delete(findByEmail(email));
-    }
-
-    private User findByEmail(String email) {
-        return mongoTemplate.findOne(
-                Query.query(Criteria.where("email").is(email)), User.class);
+        userRepository.delete(userRepository.findByEmail(email));
     }
 
     private void findAll() {
@@ -148,9 +138,5 @@ public class UserController {
         } else {
             System.out.println("User list is empty");
         }
-    }
-
-    private boolean exists(String email) {
-        return findByEmail(email) != null;
     }
 }

@@ -2,29 +2,28 @@ package com.test_task;
 
 import com.test_task.controller.UserController;
 import com.test_task.repository.UserRepository;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 
 @SpringBootApplication
-public class TestTaskApplication implements CommandLineRunner {
+public class TestTaskApplication {
 
     private final UserRepository userRepository;
-    private final MongoTemplate mongoTemplate;
 
-    public TestTaskApplication(UserRepository userRepository, MongoTemplate mongoTemplate) {
+    public TestTaskApplication(UserRepository userRepository) {
         this.userRepository = userRepository;
-        this.mongoTemplate = mongoTemplate;
     }
 
     public static void main(String[] args) {
         SpringApplication.run(TestTaskApplication.class, args);
     }
 
-    @Override
-    public void run(String... args) {
-        UserController userController = new UserController(userRepository, mongoTemplate);
+    @EventListener(ApplicationReadyEvent.class)
+        public void run() {
+        userRepository.deleteAll();
+        UserController userController = new UserController(userRepository);
         userController.run();
     }
 }
